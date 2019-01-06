@@ -1,5 +1,6 @@
 #!/bin/bash
 set +x
+
 function initOutPutColor
 {
 	red='\e[0;31m'

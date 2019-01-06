@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-CMD4="sed -i -e '/AllowTcpForwarding/d'  -e '/AllowAgentForwarding/i AllowTcpForwarding yes' test"
 TUNNEL='/tmp/ssh_tunnel'
 SSHD='/etc/ssh/sshd_config'
 set +x
@@ -25,19 +24,24 @@ function configServer() {
 }
 
 function createRTunnel() {
+    #CBAM V3 simulator
     ssh -S ${TUNNEL}/tunnel-"${1}"-9010 -NqfMR 9010:localhost:9010 -oStrictHostKeyChecking=no -o CheckHostIP=no root@"$1".netact.nsn-rdnet.net;
-    echo "Tunnel: tunnel-"${1}"-9010 created"
-    ssh -S ${TUNNEL}/tunnel-"${1}"-9020 -NqfMR 9010:localhost:9020 -oStrictHostKeyChecking=no -o CheckHostIP=no root@"$1".netact.nsn-rdnet.net;
-    echo "Tunnel: tunnel-"${1}"-9020 created"
-    ssh -S ${TUNNEL}/tunnel-"${1}"-8010 -NqfMR 9010:localhost:8010 -oStrictHostKeyChecking=no -o CheckHostIP=no root@"$1".netact.nsn-rdnet.net;
-    echo "Tunnel: tunnel-"${1}"-8010 created"
+    echo "Tunnel: tunnel-${1}-9010 created"
+    #CBAM V4 simulator
+    ssh -S ${TUNNEL}/tunnel-"${1}"-9020 -NqfMR 9020:localhost:9020 -oStrictHostKeyChecking=no -o CheckHostIP=no root@"$1".netact.nsn-rdnet.net;
+    echo "Tunnel: tunnel-${1}-9020 created"
+    #this is swm simulator
+    ssh -S ${TUNNEL}/tunnel-"${1}"-8081 -NqfMR 8081:localhost:8081 -oStrictHostKeyChecking=no -o CheckHostIP=no root@"$1".netact.nsn-rdnet.net;
+    echo "Tunnel: tunnel-${1}-8081 created"
 }
 
 function createLTunnel() {
     ssh -S ${TUNNEL}/tunnel-"${1}"-17443 -NqfML 17443:clab700lbwas.netact.nsn-rdnet.net:17443 -o StrictHostKeyChecking=no -o CheckHostIP=no root@"${1}".netact.nsn-rdnet.net;
-    echo "Tunnel: tunnel-"${1}"-17443 created"
-    ssh -S ${TUNNEL}/tunnel-"${1}"-17002 -NqfML 17002:clab700lbwas.netact.nsn-rdnet.net:17002 -o StrictHostKeyChecking=no -o CheckHostIP=no root@"${1}".netact.nsn-rdnet.net;
-    echo "Tunnel: tunnel-"${1}"-17002 created"
+    echo "Tunnel: tunnel-${1}-17443 created"
+    ssh -S ${TUNNEL}/tunnel-"${1}"-17001 -NqfML 17001:clab700lbjbi.netact.nsn-rdnet.net:17001 -o StrictHostKeyChecking=no -o CheckHostIP=no root@"${1}".netact.nsn-rdnet.net;
+    echo "Tunnel: tunnel-${1}-17001 created"
+    ssh -S ${TUNNEL}/tunnel-"${1}"-17002 -NqfML 17002:clab700lbjbi.netact.nsn-rdnet.net:17002 -o StrictHostKeyChecking=no -o CheckHostIP=no root@"${1}".netact.nsn-rdnet.net;
+    echo "Tunnel: tunnel-${1}-17002 created"
 }
 
 function stop() {
