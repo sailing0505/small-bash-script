@@ -13,8 +13,12 @@ EOF
 # fi
 
 function call() {
-	value=$(test) || error;
-	echo $value;
+	#value=$(test) || error;
+	#value=$(test);
+	#echo $value;
+    if ! test; then
+        echo test pass
+    fi
 }
 
 function test() {
