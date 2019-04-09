@@ -2,47 +2,12 @@
 # Copyright (C) 2019 Jason Wu <wuhanghai@gmail.com>
 #
 # This file is part of k8sAdmin
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 
-
-
-function usage() {
-    cat << endl
-This tool is used to enable and disable the isuncloud service for user in k8s cluster
-
-Syntax:
-$(basename $0)
-    [enable] <userId> : create a isuncloud service for specific userId
-    [disable]  <userId> : delete a isuncloud service for specific userId
-    [list] <userId>: list all or specific active user information
-    [update] <image>: update the isuncloud image version
-Example:
-    [root@k8s-master ~]# $(basename $0) enable userid001
-    creat isuncloud service successful. userid=userid001 port=10034
-
-
-endl
-}
-
-function checkService() {
+function _checkService() {
     return 0
 }
 
-function getId() {
+function _getId() {
     if [ -z "${1}" ]; then
         return 1;
     fi
@@ -55,27 +20,18 @@ function getId() {
 }
 
 
-function validateId() {
+function _validateId() {
     return 0;
 }
 
-function deleteDeployment() {
+function _deleteDeployment() {
     local label=$1
-    if execute_backend_function delete $label; then
+    if _runApi delete $label; then
         rm -f "${DEPLOY_DIR}/isuncloud-${label}.yaml"
         echo "isuncloud service is deleted"
     fi
 }
 
-function queryDeployment() {
-    echo "query deployment"
-}
-
-function log() {
-    message=$2;
-    logfile="${LOGDIR}/run.log"
-    echo "$(date '+%Y-%m-%dT%H:%M:%S.%3N%z'): $message" >> ${logfile};
-}
 
 function _createDeployment() {
     local id=$1;
@@ -124,10 +80,10 @@ spec:
     protocol: TCP
     targetPort: 9000
 endl
-    execute_backend_function create ${id}
+    _runApi create ${id}
 }
 
-function execute_backend_function() {
+function _runApi() {
     local exec_func="${METHOD}_$1"
     if declare -F "${exec_func}" > /dev/null; then
         ${exec_func} $2;
@@ -136,10 +92,36 @@ function execute_backend_function() {
 
 function _getPort() {
     local label=isuncloud-$1
-    local port=$(execute_backend_function getport $label)
+    local port=$(_runApi getport $label)
     if [ $? -eq 0 ]; then
         echo ${port}
     fi
+}
+
+function usage() {
+    cat << endl
+This tool is used to enable and disable the isuncloud service for user in k8s cluster
+
+Syntax:
+$(basename $0)
+    [enable] <userId> : create a isuncloud service for specific userId
+    [disable]  <userId> : delete a isuncloud service for specific userId
+    [start] <userId> : start the isuncloud service for specific userId
+    [stop] <userId> : stop the isuncloud service for specific userId
+    [list] <userId>: list all or specific active user information
+    [update] <image>: update the isuncloud image version
+Example:
+    [root@k8s-master ~]# $(basename $0) enable userid001
+    creat isuncloud service successful. userid=userid001 port=10034
+
+
+endl
+}
+
+function log() {
+    message=$2;
+    logfile="${LOGDIR}/run.log"
+    echo "$(date '+%Y-%m-%dT%H:%M:%S.%3N%z'): $message" >> ${logfile};
 }
 
 function list() {
@@ -155,7 +137,7 @@ function list() {
             echo -e "${id}    ${port}"
         done
     else
-        local id=$(getId $1)
+        local id=$(_getId $1)
         local label="isuncloud-${id}"
         if ls ${DEPLOY_DIR}/${label}.yaml ; then
             #the user is exist
@@ -166,25 +148,38 @@ function list() {
             exit 1
         fi
     fi
+    return 0
 }
 
 function disable() {
-    local id=$(getId $1)
-    validateId ${id}
-    deleteDeployment ${id}
-    if checkService ${id}; then
+    local id=$(_getId $1)
+    _validateId ${id}
+    _deleteDeployment ${id}
+    if _checkService ${id}; then
         echo "delete isuncloud service successful. userid=${id}"
+        return 0
     fi
 }
 
 function enable() {
-    local id=$(getId $1);
-    validateId $id;
+    local id=$(_getId $1);
+    _validateId $id;
     _createDeployment $id;
     local port=$(_getPort $id);
-    if checkService $id; then
+    if _checkService $id; then
         echo "create isuncloud service successful. userid=${id} port=${port}"
+        return 0;
     fi
+}
+
+function start() {
+    local id=$(_getId $1)
+    
+    return 0;
+}
+
+function stop() {
+    return 0;
 }
 
 function parseArg() {
@@ -199,12 +194,13 @@ function parseArg() {
                 usage
                 exit 0
                 ;;
-            enable ) shift
-                enable $@
+            "enable" ) shift
+                # enable $@
+                echo $@
                 exit $?
                 ;;
-            disable ) shift
-                disable $@
+            "disable" ) shift
+                # disable $@
                 exit $?
                 ;;
             "list" ) shift
@@ -215,7 +211,13 @@ function parseArg() {
                 update $@
                 exit $?
                 ;;
-            "*" )
+            "start" ) shift
+                start $@
+                exit $?
+            "stop" ) shift
+                stop $@
+                exit $?
+            * )
                 usage
                 exit 1
                 ;;
