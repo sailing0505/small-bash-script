@@ -42,7 +42,7 @@ function _createDeployment() {
     fi
     log "create deployment for user: ${id}"
     cat << endl >> ${DEPLOY_DIR}/isuncloud-${id}.yaml
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
   name: isuncloud-${id}
@@ -63,7 +63,7 @@ spec:
         name: isuncloud
       restartPolicy: Always
 ---
-apiVersion: v1
+apiVersion: extensions/v1beta1
 kind: Service
 metadata:
   name: isuncloud-${id}
@@ -79,7 +79,25 @@ spec:
     port: 80
     protocol: TCP
     targetPort: 9000
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: isuncloud-ingress-${id}
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  labels:
+    app: isuncloud-${id}
+spec:
+  rules:
+  - host: ${id}.isuncloud.com
+    http:
+      paths:
+      - backend:
+          serviceName: isuncloud-${id}
+          servicePort: 80
 endl
+
     _runApi create ${id}
 }
 
@@ -106,8 +124,6 @@ Syntax:
 $(basename $0)
     [enable] <userId> : create a isuncloud service for specific userId
     [disable]  <userId> : delete a isuncloud service for specific userId
-    [start] <userId> : start the isuncloud service for specific userId
-    [stop] <userId> : stop the isuncloud service for specific userId
     [list] <userId>: list all or specific active user information
     [update] <image>: update the isuncloud image version
 Example:
@@ -167,14 +183,14 @@ function enable() {
     _createDeployment $id;
     local port=$(_getPort $id);
     if _checkService $id; then
-        echo "create isuncloud service successful. userid=${id} port=${port}"
+        echo "create isuncloud service successful. userid=${id} port=${port} url=http://${id}.isuncloud.com"
         return 0;
     fi
 }
 
 function start() {
     local id=$(_getId $1)
-    
+
     return 0;
 }
 
@@ -195,12 +211,11 @@ function parseArg() {
                 exit 0
                 ;;
             "enable" ) shift
-                # enable $@
-                echo $@
+                enable $@
                 exit $?
                 ;;
             "disable" ) shift
-                # disable $@
+                disable $@
                 exit $?
                 ;;
             "list" ) shift
@@ -214,9 +229,11 @@ function parseArg() {
             "start" ) shift
                 start $@
                 exit $?
+                ;;
             "stop" ) shift
                 stop $@
                 exit $?
+                ;;
             * )
                 usage
                 exit 1
@@ -252,6 +269,7 @@ function init() {
     LOGDIR="${ROOT}/log"
     mkdir -p ${DEPLOY_DIR};
     mkdir -p ${LOGDIR};
+    export PATH="/opt/kubernetes/bin:$PATH"
 
     load_config
     # METHOD=kubectl
