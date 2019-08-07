@@ -43,10 +43,10 @@ function newSSconfig() {
     cat >> /tmp/${name}.json << endl
 {
     "server":"${name}.${host}",
-    "server_port":"39934",
+    "server_port":"39863",
     "local_address": "127.0.0.1",
     "local_port":1080,
-    "password":"6340655754",
+    "password":"4920056644",
     "timeout":300,
     "method":"aes-256-cfb",
     "fast_open": false
