@@ -2,12 +2,11 @@
 
 TUNNEL='/tmp/ssh_tunnel'
 SSHD='/etc/ssh/sshd_config'
-SUDO='sudo /home/j30wu/software/myscript/sudo.sh'
 DMGR_NODE='node14'
 ABS=$(readlink -f $0)
 DIRNAME=$(dirname ${ABS})
+SUDO="sudo ${DIRNAME}/sudo.sh"
 realLabName=''
-set +x
 
 function start() {
     local id=${1};
@@ -25,24 +24,24 @@ function start() {
 }
 
 function isAutoLoginEnable() {
-    local hostName=${1};
-    grep "${hostName}" ~/.ssh/known_clab.txt 2>&1 > /dev/null;
-    return $?;
+    local hostName=${1}
+    grep "${hostName}" ~/.ssh/known_clab.txt 2>&1 > /dev/null
+    return $?
 }
 
 function prepareEnv() {
-    mkdir -p ${TUNNEL};
-    echo "close all exiting tunnel";
-    closeAllTunnel;
+    mkdir -p ${TUNNEL}
+    echo "close all exiting tunnel"
+    closeAllTunnel
     local id=${1}
     shift
     for node in $@; do
         if ! isAutoLoginEnable clab"${id}"${node}; then
-            copySshKey root@clab"${id}"${node}.netact.nsn-rdnet.net;
-            getRealLabName clab"${id}"${node};
+            copySshKey root@clab"${id}"${node}.netact.nsn-rdnet.net
+            getRealLabName clab"${id}"${node}
         fi
-        configServer clab"${id}"${node};
-        getRealLabName clab"${id}"${node};
+        configServer clab"${id}"${node}
+        getRealLabName clab"${id}"${node}
     done
     configLocal ${realLabName}
 }
@@ -51,12 +50,12 @@ function copySshKey() {
     local login=${1}
     if [ ! -e "$HOME/.ssh/id_rsa.pub" ]; then
             echo "[2clab] ssh key file not found, try to generate"
-            ssh-keygen -t rsa;
+            ssh-keygen -t rsa
             if [[ $? -eq 0 ]]; then
-                echo "[2clab] generate ssh-key successful";
+                echo "[2clab] generate ssh-key successful"
             else
-                echo "[2clab] generate ssh-key failed";
-                exit 1;
+                echo "[2clab] generate ssh-key failed"
+                exit 1
             fi
         fi
         #ssh-copy-id -o StrictHostKeyChecking=no -oCheckHostIP=no -i ~/.ssh/id_rsa.pub $LOGIN_ADDR
@@ -68,7 +67,8 @@ function copySshKey() {
 }
 
 function copyKey() {
-    (${DIRNAME}/copykey_expect.sh $1)
+    (${DIRNAME}/copykey_expect.sh $1 ~/.ssh/id_rsa.pub)
+    (${SUDO} ${DIRNAME}/copykey_expect.sh $1 /root/.ssh/id_rsa.pub)
     return $?
 }
 
@@ -172,14 +172,14 @@ function stop() {
 }
 
 function closeAllTunnel() {
-    cd ${TUNNEL} || echo "folder ${TUNNEL} not exist";
-    tunnels=$(echo *);
-    cd - 1>&2 >> /dev/null || echo "folder ${TUNNEL} not exist";
+    cd ${TUNNEL} || echo "folder ${TUNNEL} not exist"
+    tunnels=$(echo *)
+    cd - 1>&2 >> /dev/null || echo "folder ${TUNNEL} not exist"
     if [[ ${tunnels} != "*" ]]; then
         #the folder is not empty
         for i in ${tunnels}; do
-            closeTunnel "${i}";
-            status=$?;
+            closeTunnel "${i}"
+            status=$?
             if [[ ${status} -ne 0 ]]; then
                 closeTunnelSudo "${i}"
             fi
@@ -202,14 +202,14 @@ function closeTunnelSudo() {
 }
 
 function closeTunnel() {
-    local IFS="-";
-    local content=($1);
-    local host=${content[1]};
-    local port=${content[2]};
-    ssh -S ${TUNNEL}/"${1}" -O exit root@"${host}".netact.nsn-rdnet.net 2>>/dev/null;
+    local IFS="-"
+    local content=($1)
+    local host=${content[1]}
+    local port=${content[2]}
+    ssh -S ${TUNNEL}/"${1}" -O exit root@"${host}".netact.nsn-rdnet.net 2>>/dev/null
     local ret=$?
     if [[ ${ret} -eq 0 ]]; then
-        echo "Tunnel: tunnel-$host-$port closed";
+        echo "Tunnel: tunnel-$host-$port closed"
     fi
     return ${ret}
 }
@@ -233,26 +233,26 @@ function main() {
     while [[ -n "$1" ]]; do
         case $1 in
             -h| --help )
-                usage;
-                exit 0;
+                usage
+                exit 0
                 ;;
             start ) shift
                 if [[ -z $1 ]]; then
                     echo "invalid command, need assign lab id"
-                    usage;
-                    exit 1;
+                    usage
+                    exit 1
                 fi
-                start $@;
-                exit $?;
+                start $@
+                exit $?
                 ;;
             stop ) shift
-                stop $@;
-                exit $?;
+                stop $@
+                exit $?
                 ;;
             * ) shift
-                echo "unknow command";
-                usage;
-                exit 1;
+                echo "unknow command"
+                usage
+                exit 1
         esac
     done
 }
