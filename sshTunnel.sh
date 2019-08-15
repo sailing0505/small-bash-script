@@ -85,6 +85,7 @@ function cleanHostFile() {
 
 function addHosts() {
     addHostToLocal "${name}lbwas.netact.nsn-rdnet.net"
+    addHostToLocal "${name}lbjbi.netact.nsn-rdnet.net"
     addHostToLocal "${name}${DMGR_NODE}.netact.nsn-rdnet.net"
     addHostToLocal "${name}node15.netact.nsn-rdnet.net"
 }
@@ -115,6 +116,9 @@ function createNtcappLTunnel() {
     createLTunnel 10448 "${realLabName}lbwas.netact.nsn-rdnet.net:10448" "${1}.netact.nsn-rdnet.net" #keyclock public port for OAUTH2.0
     createLTunnel 17001 "${realLabName}lbjbi.netact.nsn-rdnet.net:17001" "${1}.netact.nsn-rdnet.net"
     createLTunnel 17002 "${realLabName}lbjbi.netact.nsn-rdnet.net:17002" "${1}.netact.nsn-rdnet.net"
+    createLTunnel 17003 "${realLabName}lbjbi.netact.nsn-rdnet.net:17003" "${1}.netact.nsn-rdnet.net"
+    createLTunnelSudo 443 "${realLabName}lbwas.netact.nsn-rdnet.net:443" "${1}.netact.nsn-rdnet.net" #LB HTTPS
+    createLTunnelSudo 80 "${realLabName}lbwas.netact.nsn-rdnet.net:80" "${1}.netact.nsn-rdnet.net" #LB HTTPS
 }
 
 function createNtcappRTunnel() {
@@ -149,9 +153,9 @@ function createLTunnelSudo() {
     local entrance=$1
     local exit=$2
     local sshServer=$3
-    
+
     ${SUDO} ssh -S ${TUNNEL}/tunnel-"${entrance}"-"${exit}" -NqfML ${entrance}:${exit} -o StrictHostKeyChecking=no -o CheckHostIP=no root@${sshServer}
-    echo "Tunnel: tunnel-${entrance}-${exit} created"   
+    echo "Tunnel: tunnel-${entrance}-${exit} created"
 }
 
 function createRTunnel() {
@@ -171,7 +175,7 @@ function closeAllTunnel() {
     cd ${TUNNEL} || echo "folder ${TUNNEL} not exist";
     tunnels=$(echo *);
     cd - 1>&2 >> /dev/null || echo "folder ${TUNNEL} not exist";
-    if [[ ${tunnels} != "*" ]]; then 
+    if [[ ${tunnels} != "*" ]]; then
         #the folder is not empty
         for i in ${tunnels}; do
             closeTunnel "${i}";
