@@ -33,7 +33,7 @@ function getHostByName() {
     if echo ${simple_group[@]}|grep ${name} 1>&2>/dev/null; then
         echo ${hosts[0]}
     else
-        echo ${hosts[1]}
+        echo ${hosts[0]}
     fi
 }
 
@@ -43,10 +43,10 @@ function newSSconfig() {
     cat >> /tmp/${name}.json << endl
 {
     "server":"${name}.${host}",
-    "server_port":"39863",
+    "server_port":"39796",
     "local_address": "127.0.0.1",
     "local_port":1080,
-    "password":"4920056644",
+    "password":"5729032048",
     "timeout":300,
     "method":"aes-256-cfb",
     "fast_open": false
@@ -85,12 +85,12 @@ Syntax:
     ss_admin.sh stop [ss_server]
     ss_admin.sh status
 Avaliable server list:
-    echo ${servers[*]}
+    ${servers[*]}
 endl
 }
 
 function main() {
-    servers=(d0 d1 d2 d3 g0 g1 g2 g3 n0 n1 n2 n3 v0 v1 v2 v3)
+    servers=(c0 c1 c2 c3 d0 d1 d2 d3 g0 g1 g2 g3 v0 v1 v2 v3)
     hosts=(2simple.dev gyteng.com)
     while [[ -n ${1} ]] ;do
         case $1 in

@@ -84,10 +84,12 @@ function cleanHostFile() {
 }
 
 function addHosts() {
+    local name=${1}
     addHostToLocal "${name}lbwas.netact.nsn-rdnet.net"
     addHostToLocal "${name}lbjbi.netact.nsn-rdnet.net"
     addHostToLocal "${name}${DMGR_NODE}.netact.nsn-rdnet.net"
     addHostToLocal "${name}node15.netact.nsn-rdnet.net"
+    addHostToLocal "${name}node02.netact.nsn-rdnet.net"
 }
 
 function addHostToLocal() {
@@ -117,6 +119,7 @@ function createNtcappLTunnel() {
     createLTunnel 17001 "${realLabName}lbjbi.netact.nsn-rdnet.net:17001" "${1}.netact.nsn-rdnet.net"
     createLTunnel 17002 "${realLabName}lbjbi.netact.nsn-rdnet.net:17002" "${1}.netact.nsn-rdnet.net"
     createLTunnel 17003 "${realLabName}lbjbi.netact.nsn-rdnet.net:17003" "${1}.netact.nsn-rdnet.net"
+    createLTunnel 1521 "${realLabName}node02.netact.nsn-rdnet.net:1521" "${1}.netact.nsn-rdnet.net" #ORACLE
     createLTunnelSudo 443 "${realLabName}lbwas.netact.nsn-rdnet.net:443" "${1}.netact.nsn-rdnet.net" #LB HTTPS
     createLTunnelSudo 80 "${realLabName}lbwas.netact.nsn-rdnet.net:80" "${1}.netact.nsn-rdnet.net" #LB HTTPS
 }
