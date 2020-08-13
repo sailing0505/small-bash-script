@@ -91,7 +91,7 @@ endl
 
 function main() {
     servers=(c0 c1 c2 c3 d0 d1 d2 d3 g0 g1 g2 g3 v0 v1 v2 v3)
-    hosts=(2simple.dev gyteng.com)
+    hosts=(3840x2160.work gyteng.com)
     while [[ -n ${1} ]] ;do
         case $1 in
             "start" ) shift

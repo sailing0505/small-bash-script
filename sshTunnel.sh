@@ -5,7 +5,7 @@ SSHD='/etc/ssh/sshd_config'
 DMGR_NODE='node14'
 ABS=$(readlink -f $0)
 DIRNAME=$(dirname ${ABS})
-SUDO="sudo ${DIRNAME}/sudo.sh"
+SUDO="sudo /home/j30wu/software/myscript/sudo.sh"
 realLabName=''
 
 function start() {
