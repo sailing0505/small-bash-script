@@ -2,7 +2,7 @@
 
 DAWANG="https://dawangidc.net/modules/servers/V2raySocks/osubscribe.php?sid=17257&token=SlZ583zS9q2I"
 store="raw.json"
-set -x
+#set -x
 function checkResult() {
     if [ $1 -ne 0 ];then
         echo "$2"
@@ -13,7 +13,7 @@ function checkResult() {
 function download() {
     local enc=$(curl -s --noproxy -L "${DAWANG}")
     echo $enc|base64 -d 2>/dev/null > vmess.tmp
-    checkResult $? "download servers config from IDC failed"
+    #checkResult $? "download servers config from IDC failed"
     rm -f ${store}
     while read s;do
         s=$(echo ${s#vmess://}|base64 -d)
@@ -35,7 +35,7 @@ function configServer() {
         "inbounds": [
           {
             "port": 1082,
-            "listen": "127.0.0.1",
+            "listen": "0.0.0.0",
             "protocol": "socks",
             "settings": { "auth": "noauth", "udp": false, "accounts": [] },
             "streamSettings": {},
@@ -43,7 +43,7 @@ function configServer() {
           },
           {
             "port": 1081,
-            "listen": "127.0.0.1",
+            "listen": "0.0.0.0",
             "protocol": "http",
             "settings": {"userLevel": 8},
             "tag": "http"

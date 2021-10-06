@@ -17,9 +17,6 @@ function start() {
         prepareEnv ${id} "node05" "node06"
         createNtcappLTunnel "clab${id}node05"
         createNtcappRTunnel "clab${id}node06"
-    elif [ $2 == '--bodong' ];then
-        createBodongLTnuunel
-        addHostToLocal "git.bodong.tech" 
     else
         usage
         exit 1
@@ -83,7 +80,7 @@ function configLocal() {
 
 function cleanHostFile() {
     echo "clean up /etc/hosts file"
-    ${SUDO} "sed '/127.0.0.1 *clab/'d -i /etc/hosts" 1>&2 >>/dev/null
+    ${SUDO} "sed '/127.0.0.1 *clab/'d -i /etc/hosts"
 }
 
 function addHosts() {
@@ -114,22 +111,6 @@ function getRealLabName() {
 function configServer() {
     echo "config ssh server for ${1}, enabel AllowTcpForwarding";
     ssh -q -oStrictHostKeyChecking=no -o CheckHostIP=no root@"${1}".netact.nsn-rdnet.net "sed -i -e '/AllowTcpForwarding/d'  -e '/AllowAgentForwarding/i AllowTcpForwarding yes' ${SSHD} && systemctl restart sshd;"
-}
-
-function createBodongLTnuunel() {
-    mkdir -p ${TUNNEL}
-    # mongosh tunnel
-    ssh -S ${TUNNEL}/tunnel-"27017"-"hanghai.cloud.bodong.tech:27017" -NqfML 27017:hanghai.cloud.bodong.tech:27017 -o StrictHostKeyChecking=no -o CheckHostIP=no -i /home/j30wu/.ssh/id_rsa.pub -p 8400 ubuntu@dev.bodong.pro
-    echo "Tunnel: tunnel-27017-hanghai.cloud.bodong.tech:27017 created"
-    ssh -S ${TUNNEL}/tunnel-"27018"-"mongodb.cloud.bodong.tech:27017" -NqfML 27018:mongodb.cloud.bodong.tech:27017 -o StrictHostKeyChecking=no -o CheckHostIP=no -i /home/j30wu/.ssh/id_rsa.pub -p 8400 ubuntu@dev.bodong.pro
-    echo "Tunnel: tunnel-27018-mongodb.cloud.bodong.tech:27017 created"
-    # git
-    ssh -S ${TUNNEL}/tunnel-"9418"-"mongodb.cloud.bodong.tech:9418" -NqfML 9418:git.bodong.tech:9418 -o StrictHostKeyChecking=no -o CheckHostIP=no -i /home/j30wu/.ssh/id_rsa.pub -p 8400 ubuntu@dev.bodong.pro
-    echo "Tunnel: tunnel-9418-git.bodong.tech:9418 created"
-
-    # socks5
-    ssh -S ${TUNNEL}/tunnel-"1083"-"socks5" -NqfMD 127.0.0.1:1083 -o StrictHostKeyChecking=no -o CheckHostIP=no -i /home/j30wu/.ssh/id_rsa.pub -p 8400 ubuntu@dev.bodong.pro
-    echo "Tunnel: sock5-1083 created"
 }
 
 function createNtcappLTunnel() {
@@ -238,16 +219,33 @@ function closeTunnel() {
 
 function usage() {
     cat << endl
-This script is used to setup the ssh tunnel ntcapp swm TA
+ __^__            __^__
+( ___ )----------( ___ )
+ | / |            | \ |
+ | / | NEO Bridge | \ |
+ |___|            |___|
+(_____)----------(_____)
+
+
+Description:
+This script is used to setup the kubectl config to connect NEO remote env
+In NEO network architecture, only edge node have external network. It makes a lot of trouble for development work.
+This tool will create the Tunnel between your local env and k8s cluster. and config the local kubectl tool to remote
+lab directly.
+Enjoy ^v^
+
 Syntax:
     $0
-        start [lab id] <--monitor|--ntcapp|--bodong>: start the ssh tunnel between local laptop and clonepool for specific purpose
-        stop: clear all existing ssh tunnel
-        [-h|--help]: print the help message
+        add <labId> <edge node ip address> <pem file>: start the ssh tunnel between local laptop and clonepool for specific purpose
+        rm <labId>: remove lab configuration from kubectl
+        ls: list all remote lab
+        switch <labId>: active default lab by kubectl
+        [-h|--help]: get the help
 Example:
-    $0 start 2564: create 3 ssh tunnel for clab2564
-    $0 stop
-
+    $0 add cb1105 10.10.1156.26 cnms.pen
+    $0 ls
+    $0 switch cb1105
+    $0 rm cb1105
 endl
 }
 
